@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 import logging
 import ast
-from typing import Dict, Set, List
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,7 @@ class CursorRulesManager:
         """
         self.project_root = Path(project_root)
         self.rules_path = project_root / ".cursorrules"
+        self.template_dir = Path(__file__).parent / "templates"
         self.ensure_rules_file()
     
     def ensure_rules_file(self):
@@ -28,26 +29,13 @@ class CursorRulesManager:
             self._create_initial_rules()
     
     def _create_initial_rules(self):
-        """Create initial XML structure with docstring policy."""
+        """Create initial XML structure with docstring policy and LLM guidelines."""
         root = ET.Element("project-rules")
         
-        # Add docstring policy
-        rules = ET.SubElement(root, "rules")
-        docstring_policy = ET.SubElement(rules, "docstring-policy")
-        
-        requirement = ET.SubElement(docstring_policy, "requirement")
-        requirement.text = "All Python files must maintain up-to-date docstrings"
-        
-        format_elem = ET.SubElement(docstring_policy, "format")
-        purpose = ET.SubElement(format_elem, "purpose")
-        purpose.text = "Clear statement of file's responsibility"
-        key_components = ET.SubElement(format_elem, "key_components")
-        key_components.text = "List main classes/functions"
-        dependencies = ET.SubElement(format_elem, "dependencies")
-        dependencies.text = "Document relationships"
-        
-        update_trigger = ET.SubElement(docstring_policy, "update-trigger")
-        update_trigger.text = "Any functional changes to file"
+        # Add LLM guidelines from template
+        guidelines = self._load_guidelines_template()
+        if guidelines is not None:
+            root.append(guidelines)
         
         # Add project map section
         project_map = ET.SubElement(root, "project-map")
@@ -56,8 +44,22 @@ class CursorRulesManager:
         
         self._write_xml(root)
     
+    def _load_guidelines_template(self) -> Optional[ET.Element]:
+        """Load LLM guidelines from template file.
+        
+        Returns:
+            Guidelines XML element or None if template not found
+        """
+        template_path = self.template_dir / "llm_guidelines.xml"
+        try:
+            tree = ET.parse(template_path)
+            return tree.getroot()
+        except Exception as e:
+            logger.warning(f"Could not load guidelines template: {e}")
+            return None
+    
     def update_project_map(self, structure: dict):
-        """Update project-map section in .cursorrules.
+        """Update project-map section in .cursorrules while preserving guidelines.
         
         Args:
             structure: Dictionary containing project structure and docstrings
@@ -66,8 +68,15 @@ class CursorRulesManager:
             tree = ET.parse(self.rules_path)
             root = tree.getroot()
             
-            # Preserve rules section
-            rules = root.find("rules")
+            # Preserve guidelines
+            guidelines = root.find("llm-guidelines")
+            
+            # Update guidelines if template has changed
+            new_guidelines = self._load_guidelines_template()
+            if new_guidelines is not None:
+                if guidelines is not None:
+                    root.remove(guidelines)
+                root.append(new_guidelines)
             
             # Clear and recreate project-map
             project_map = root.find("project-map")
@@ -81,7 +90,7 @@ class CursorRulesManager:
             
             # Add relationships section with enhanced flow
             relationships = ET.SubElement(project_map, "relationships")
-            self._add_relationships(relationships, file_paths)
+            self._add_relationships(relationships)
             
             # Write back to file
             self._write_xml(root)
@@ -130,46 +139,29 @@ class CursorRulesManager:
                 key_components = ET.SubElement(file_elem, "key_components")
                 self._add_key_components(key_components, file_path)
                 
-                # Add dependencies
+                # Add dependencies (to be maintained by LLM)
                 dependencies = ET.SubElement(file_elem, "dependencies")
-                deps = self._analyze_dependencies(file_path)
+                self._add_core_dependencies(dependencies, name)
                 
-                outgoing = ET.SubElement(dependencies, "outgoing")
-                for dep in sorted(deps["outgoing"]):
-                    dep_elem = ET.SubElement(outgoing, "dependency")
-                    dep_elem.text = dep
-                
-                incoming = ET.SubElement(dependencies, "incoming")
                 processed_files.append(file_path)
         
         return processed_files
     
-    def _analyze_dependencies(self, file_path: Path) -> Dict[str, Set[str]]:
-        """Analyze file dependencies through import statements.
+    def _add_core_dependencies(self, parent: ET.Element, filename: str):
+        """Add core project dependencies (maintained by LLM).
         
         Args:
-            file_path: Path to the Python file
-            
-        Returns:
-            Dictionary with outgoing and incoming dependencies
+            parent: Parent XML element to add dependencies to
+            filename: Name of the file to add dependencies for
         """
-        dependencies = {"outgoing": set(), "incoming": set()}
-        try:
-            with open(file_path) as f:
-                tree = ast.parse(f.read())
-            
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Import):
-                    for name in node.names:
-                        dependencies["outgoing"].add(f"{name.name}: Module import")
-                elif isinstance(node, ast.ImportFrom):
-                    module = node.module or ""
-                    for name in node.names:
-                        dependencies["outgoing"].add(f"{module}.{name.name}: Specific import")
-        except Exception as e:
-            logger.warning(f"Could not analyze dependencies in {file_path}: {e}")
+        outgoing = ET.SubElement(parent, "outgoing")
         
-        return dependencies
+        if filename == "core.py":
+            dep = ET.SubElement(outgoing, "dependency")
+            dep.text = "CursorRulesManager: For maintaining XML documentation"
+        elif filename == "cursorrules_manager.py":
+            dep = ET.SubElement(outgoing, "dependency")
+            dep.text = "ProjectScanner: For project structure analysis"
     
     def _add_key_components(self, parent: ET.Element, file_path: Path):
         """Extract and add key components (classes/functions) from a Python file.
@@ -195,12 +187,11 @@ class CursorRulesManager:
         except Exception as e:
             logger.warning(f"Could not analyze components in {file_path}: {e}")
     
-    def _add_relationships(self, parent: ET.Element, file_paths: List[Path]):
+    def _add_relationships(self, parent: ET.Element):
         """Add detailed relationships between components.
         
         Args:
             parent: Parent XML element to add relationships to
-            file_paths: List of processed file paths
         """
         flow = ET.SubElement(parent, "flow")
         flow.set("description", "Project documentation process")
@@ -208,16 +199,6 @@ class CursorRulesManager:
             "ProjectScanner analyzes project structure and docstrings → "
             "CursorRulesManager maintains XML documentation"
         )
-        
-        # Add file relationships based on imports
-        for file_path in file_paths:
-            if file_path.name == "core.py":
-                relationship = ET.SubElement(parent, "relationship")
-                relationship.set("type", "core-functionality")
-                relationship.text = (
-                    "core.ProjectScanner provides scanning functionality → "
-                    "cursorrules_manager.CursorRulesManager uses it for updates"
-                )
     
     def _write_xml(self, root: ET.Element):
         """Write formatted XML to file.

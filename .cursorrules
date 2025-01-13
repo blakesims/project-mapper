@@ -1,5 +1,47 @@
 <?xml version='1.0' encoding='utf-8'?>
 <project-rules>
+  <code-rules>
+    <docstrings>
+      <template>
+            """
+            {One-line purpose}
+
+            Components:
+                {Class/Function}: {What and why}
+
+            Dependencies:
+                Uses: {Component}: {Why}
+                Used By: {Component}: {Why}
+            """
+        </template>
+    </docstrings>
+    <maintenance>
+      <update-triggers>
+        <trigger>Purpose/functionality changes</trigger>
+        <trigger>Components added/modified</trigger>
+        <trigger>Dependencies shift</trigger>
+        <trigger>Architecture changes</trigger>
+      </update-triggers>
+      <focus-points>
+        <point>Why over what</point>
+        <point>Key relationships</point>
+        <point>Other developers perspective</point>
+        <point>Architectural significance</point>
+      </focus-points>
+    </maintenance>
+    <workflow>
+      <steps>
+        <step>Read existing docs</step>
+        <step>Make changes</step>
+        <step>Update affected docs</step>
+      </steps>
+      <verification>
+        <check>Docstrings reflect current purpose</check>
+        <check>Dependencies show key relationships</check>
+        <check>Architecture is clear</check>
+      </verification>
+    </workflow>
+  </code-rules>
   <project-map>
     <structure>
       <directory name="llm_companion">
@@ -12,14 +54,8 @@
           </key_components>
           <dependencies>
             <outgoing>
-              <dependency>ast: Module import</dependency>
-              <dependency>cursorrules_manager.CursorRulesManager: Specific import</dependency>
-              <dependency>logging: Module import</dependency>
-              <dependency>pathlib.Path: Specific import</dependency>
-              <dependency>typing.Dict: Specific import</dependency>
-              <dependency>typing.Optional: Specific import</dependency>
+              <dependency>CursorRulesManager: For maintaining XML documentation</dependency>
             </outgoing>
-            <incoming />
           </dependencies>
         </file>
         <file name="cursorrules_manager.py">
@@ -27,26 +63,18 @@
           <key_components>
             <component>CursorRulesManager: Manages .cursorrules file updates and maintains documentation standards.</component>
             <component>ensure_rules_file(): Create .cursorrules if it doesn't exist.</component>
-            <component>update_project_map(): Update project-map section in .cursorrules.</component>
+            <component>update_project_map(): Update project-map section in .cursorrules while preserving guidelines.</component>
           </key_components>
           <dependencies>
             <outgoing>
-              <dependency>ast: Module import</dependency>
-              <dependency>logging: Module import</dependency>
-              <dependency>pathlib.Path: Specific import</dependency>
-              <dependency>typing.Dict: Specific import</dependency>
-              <dependency>typing.List: Specific import</dependency>
-              <dependency>typing.Set: Specific import</dependency>
-              <dependency>xml.etree.ElementTree: Module import</dependency>
+              <dependency>ProjectScanner: For project structure analysis</dependency>
             </outgoing>
-            <incoming />
           </dependencies>
         </file>
       </directory>
     </structure>
     <relationships>
       <flow description="Project documentation process">ProjectScanner analyzes project structure and docstrings → CursorRulesManager maintains XML documentation</flow>
-      <relationship type="core-functionality">core.ProjectScanner provides scanning functionality → cursorrules_manager.CursorRulesManager uses it for updates</relationship>
     </relationships>
   </project-map>
 </project-rules>
