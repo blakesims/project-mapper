@@ -1,7 +1,13 @@
 # Project Mapper
 
 A development tool that maintains up-to-date project documentation specifically designed for LLM-assisted development. It automatically tracks project structure and docstrings, maintaining a standardized `.cursorrules` file that can be included in every interaction with an LLM.
+
 Note: only working for python at the moment, typescript is next on the list.
+
+Running this will override your current .cursorrules file to produce an xml-structured file with two parts:
+1. base template (this includes the instructions to the LLM to keep the file docstrings updated
+2. project/language-specific rules/instructions to follow
+
 
 ## Features
 
@@ -49,7 +55,9 @@ Note: Replace `/path/to/project-mapper` with the actual path to where you've clo
 
 ### Command Line Interface
 
-Important: update your cursorrules file first.
+Important: Make sure you backup your `.cursorrules` file first - it will override it!
+
+When you get the standard base template, you can then add to the template by modifying the `python.xml` or other extended template in the `.project-mapper/teplates` directory.
 
 ```bash
 # Setup templates (do this first)
