@@ -44,17 +44,27 @@
   </code-rules>
   <project-map>
     <structure>
-      <file name="test_scanner.py">
-        <purpose>Test script for the LLM Project Companion.</purpose>
-        <components>
-          <component type="function" name="main">Run the project scanner on the current directory.</component>
-          <component type="function" name="print_structure">Print the project structure in a readable format.</component>
-        </components>
-      </file>
+      <directory name="tests">
+        <directory name="integration">
+          <file name="test_scanner.py">
+            <purpose>Test script for the LLM Project Companion.</purpose>
+            <components>
+              <component type="function" name="main">Run the project scanner on the current directory.</component>
+              <component type="function" name="print_structure">Print the project structure in a readable format.</component>
+            </components>
+          </file>
+        </directory>
+      </directory>
       <directory name="src">
-        <directory name="src/project_mapper">
-          <directory name="src/project_mapper/core">
-            <file name="src/project_mapper/core/scanner.py">
+        <directory name="project_mapper">
+          <file name="cli.py">
+            <purpose>Command line interface for project-mapper.</purpose>
+            <components>
+              <component type="function" name="main">Main CLI entry point.</component>
+            </components>
+          </file>
+          <directory name="core">
+            <file name="scanner.py">
               <purpose>Core scanning functionality for project documentation.</purpose>
               <components>
                 <component type="class" name="BaseScanner">Abstract base class for language-specific scanners.</component>
@@ -64,7 +74,7 @@
                 <component type="function" name="scan_project">Scan project directory for supported files.</component>
               </components>
             </file>
-            <file name="src/project_mapper/core/xml_manager.py">
+            <file name="xml_manager.py">
               <purpose>XML management for project documentation.</purpose>
               <components>
                 <component type="class" name="XMLManager">Manages project documentation in XML format.</component>
@@ -73,19 +83,8 @@
               </components>
             </file>
           </directory>
-          <directory name="src/project_mapper/adapters">
-            <directory name="src/project_mapper/adapters/python">
-              <file name="src/project_mapper/adapters/python/scanner.py">
-                <purpose>Python-specific implementation of project scanner.</purpose>
-                <components>
-                  <component type="class" name="PythonScanner">Scanner implementation for Python projects.</component>
-                  <component type="function" name="is_supported_file">Check if file is a Python source file.</component>
-                  <component type="function" name="extract_documentation">Extract documentation from Python source file.</component>
-                  <component type="function" name="detect_dependencies">Detect Python file dependencies through imports.</component>
-                </components>
-              </file>
-            </directory>
-            <file name="src/project_mapper/adapters/base.py">
+          <directory name="adapters">
+            <file name="base.py">
               <purpose>Abstract base adapter interface for language-specific scanners.</purpose>
               <components>
                 <component type="class" name="BaseAdapter">Abstract base class for language-specific scanners.</component>
@@ -94,13 +93,26 @@
                 <component type="function" name="scan_project">Scan project directory for supported files.</component>
               </components>
             </file>
+            <directory name="python">
+              <file name="scanner.py">
+                <purpose>Python-specific implementation of project scanner.</purpose>
+                <components>
+                  <component type="class" name="PythonScanner">Scanner implementation for Python projects.</component>
+                  <component type="function" name="is_supported_file">Check if file is a Python source file.</component>
+                  <component type="function" name="extract_documentation">Extract documentation from Python source file.</component>
+                </components>
+              </file>
+            </directory>
           </directory>
-          <file name="src/project_mapper/cli.py">
-            <purpose>Command line interface for project-mapper.</purpose>
-            <components>
-              <component type="function" name="main">Main CLI entry point.</component>
-            </components>
-          </file>
+          <directory name="git">
+            <file name="hooks.py">
+              <purpose>Git hook management for project-mapper.</purpose>
+              <components>
+                <component type="class" name="GitHookManager">Manages git hooks for project-mapper.</component>
+                <component type="function" name="install_hooks">Install git hooks from templates.</component>
+              </components>
+            </file>
+          </directory>
         </directory>
       </directory>
     </structure>
