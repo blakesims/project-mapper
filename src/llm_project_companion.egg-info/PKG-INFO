@@ -1,0 +1,7 @@
+Metadata-Version: 2.2
+Name: llm-project-companion
+Version: 0.0.1
+Summary: A development tool that maintains up-to-date project documentation for LLM-assisted development
+Author: Project Maintainers
+Requires-Python: >=3.9
+Requires-Dist: pathlib

@@ -6,10 +6,10 @@ requires-python = ">=3.9"
 authors = [
     {name = "Project Maintainers"}
 ]
+dependencies = [
+    "pathlib"
+]
 
 [build-system]
 requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
-[project.dependencies]
-pathlib = "*" 
+build-backend = "setuptools.build_meta" 

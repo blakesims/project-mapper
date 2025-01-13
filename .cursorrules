@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='utf-8'?>
+<project-rules>
+  <project-map>
+    <structure>
+      <directory name="llm_companion">
+        <file name="core.py">
+          <purpose>Core functionality for scanning project structure and managing docstrings.</purpose>
+          <key_components>
+            <component>ProjectScanner: Core scanner for project structure and documentation.</component>
+            <component>scan_project(): Scan project and return structure with docstrings.</component>
+            <component>update_cursorrules(): Update .cursorrules XML file with current project structure.</component>
+          </key_components>
+          <dependencies>
+            <outgoing>
+              <dependency>ast: Module import</dependency>
+              <dependency>cursorrules_manager.CursorRulesManager: Specific import</dependency>
+              <dependency>logging: Module import</dependency>
+              <dependency>pathlib.Path: Specific import</dependency>
+              <dependency>typing.Dict: Specific import</dependency>
+              <dependency>typing.Optional: Specific import</dependency>
+            </outgoing>
+            <incoming />
+          </dependencies>
+        </file>
+        <file name="cursorrules_manager.py">
+          <purpose>Manages .cursorrules file creation and updates, maintaining XML structure and project documentation.</purpose>
+          <key_components>
+            <component>CursorRulesManager: Manages .cursorrules file updates and maintains documentation standards.</component>
+            <component>ensure_rules_file(): Create .cursorrules if it doesn't exist.</component>
+            <component>update_project_map(): Update project-map section in .cursorrules.</component>
+          </key_components>
+          <dependencies>
+            <outgoing>
+              <dependency>ast: Module import</dependency>
+              <dependency>logging: Module import</dependency>
+              <dependency>pathlib.Path: Specific import</dependency>
+              <dependency>typing.Dict: Specific import</dependency>
+              <dependency>typing.List: Specific import</dependency>
+              <dependency>typing.Set: Specific import</dependency>
+              <dependency>xml.etree.ElementTree: Module import</dependency>
+            </outgoing>
+            <incoming />
+          </dependencies>
+        </file>
+      </directory>
+    </structure>
+    <relationships>
+      <flow description="Project documentation process">ProjectScanner analyzes project structure and docstrings → CursorRulesManager maintains XML documentation</flow>
+      <relationship type="core-functionality">core.ProjectScanner provides scanning functionality → cursorrules_manager.CursorRulesManager uses it for updates</relationship>
+    </relationships>
+  </project-map>
+</project-rules>
