@@ -87,7 +87,11 @@
                 - Changes to what this file uses
                 - Changes to what uses this file
             <python-specific>
-          - testing</python-specific>
+          - Changes to function signatures (params/return types)
+
+          - New decorators or class inheritance changes
+
+          - Changes to import structure</python-specific>
       </update-triggers>
     </documentation-maintenance>
   <workflow>
