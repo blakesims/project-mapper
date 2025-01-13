@@ -151,7 +151,7 @@
 
               Key Components:
 
-              main(): CLI entry point handling template setup and project scanning
+              main(): CLI entry point handling template setup and project scanning.
 
               Project Dependencies:
 
