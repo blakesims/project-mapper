@@ -107,14 +107,30 @@ class XMLManager:
         try:
             if not self.rules_path.exists():
                 self.ensure_rules_file()
+                
+            # Always start with fresh base template
+            base_template = self._load_template("base")
+            if base_template is None:
+                base_template = self._create_base_structure()
             
-            tree = ET.parse(self.rules_path)
-            root = tree.getroot()
+            # If existing file, preserve only project map
+            if self.rules_path.exists():
+                try:
+                    tree = ET.parse(self.rules_path)
+                    old_root = tree.getroot()
+                    old_map = old_root.find("project-map")
+                    if old_map is not None:
+                        project_map = base_template.find("project-map")
+                        if project_map is not None:
+                            base_template.remove(project_map)
+                        base_template.append(old_map)
+                except ET.ParseError:
+                    pass
             
-            # Update project-map section
-            project_map = root.find("project-map")
+            # Update project map with new structure
+            project_map = base_template.find("project-map")
             if project_map is None:
-                project_map = ET.SubElement(root, "project-map")
+                project_map = ET.SubElement(base_template, "project-map")
             
             # Clear existing structure
             project_map.clear()
@@ -127,7 +143,7 @@ class XMLManager:
             relationships = ET.SubElement(project_map, "relationships")
             self._add_relationships(relationships, structure)
             
-            self._write_xml(root)
+            self._write_xml(base_template)
             
         except Exception as e:
             print(f"Error updating project map: {e}")

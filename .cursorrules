@@ -1,45 +1,69 @@
 <?xml version='1.0' encoding='utf-8'?>
 <project-rules>
   <code-rules>
-    <docstrings>
-      <template>
-            """
-            {One-line purpose}
+    <file-documentation>
+      <file-level-docstring>
+                """
+                {Clear one-line statement of this file's purpose}
 
-            Components:
-                {Class/Function}: {What and why}
+                Key Components:
+                    {ClassName}: {What this class does and why it exists}
+                    {function_name}(): {What this function does and why it's needed}
 
-            Dependencies:
-                Uses: {Component}: {Why}
-                Used By: {Component}: {Why}
-            """
-        </template>
-    </docstrings>
-    <maintenance>
+                Project Dependencies:
+                    This file uses: {OtherComponent}: {Why it's used}
+                    This file is used by: {OtherComponent}: {Why it's needed}
+                """
+            </file-level-docstring>
+      <example>
+                ```python
+                """
+                Manages XML documentation updates for project structure.
+
+                Key Components:
+                    XMLManager: Handles reading and writing of .cursorrules XML file
+                    update_rules(): Updates documentation while preserving existing rules
+
+                Project Dependencies:
+                    This file uses: ProjectScanner: To get current project structure
+                    This file is used by: CLI: To execute documentation updates
+                """
+                
+                class XMLManager:
+                    ...
+                ```
+            </example>
+    </file-documentation>
+    <documentation-maintenance>
+      <llm-instructions>
+                Before modifying ANY file, you MUST:
+                1. Read the current file-level docstring
+                2. Decide if your changes affect the documentation
+                3. Output your decision in this format:
+
+                Documentation Decision:
+                - Update Required: Yes/No
+                - Reason: One clear sentence explaining why/why not
+              - Changes Needed: [If Yes] What needs to be updated
+
+              Actions Taken:
+              -If "Yes" above, include the docstring edits in your file edits
+            </llm-instructions>
       <update-triggers>
-        <trigger>Purpose/functionality changes</trigger>
-        <trigger>Components added/modified</trigger>
-        <trigger>Dependencies shift</trigger>
-        <trigger>Architecture changes</trigger>
-      </update-triggers>
-      <focus-points>
-        <point>Why over what</point>
-        <point>Key relationships</point>
-        <point>Other developers perspective</point>
-        <point>Architectural significance</point>
-      </focus-points>
-    </maintenance>
+                Check if your changes involve:
+                - File's main purpose changing
+                - New/modified classes or functions
+                - Changes to what this file uses
+                - Changes to what uses this file
+            </update-triggers>
+    </documentation-maintenance>
     <workflow>
       <steps>
-        <step>Read existing docs</step>
-        <step>Make changes</step>
-        <step>Update affected docs</step>
-      </steps>
-      <verification>
-        <check>Docstrings reflect current purpose</check>
-        <check>Dependencies show key relationships</check>
-        <check>Architecture is clear</check>
-      </verification>
+                1. READ current file-level docstring
+                2. OUTPUT documentation decision
+                3. MAKE code changes
+                4. UPDATE docstring if needed
+            </steps>
     </workflow>
   </code-rules>
   <project-map>
