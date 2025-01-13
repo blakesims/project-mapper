@@ -11,10 +11,10 @@ Project Dependencies:
 
 import subprocess
 from pathlib import Path
-from typing import Optional, List
+from typing import List, Optional
 
-DEFAULT_TEMPLATE_REPO = "https://github.com/yourusername/project-mapper-templates.git"
-TEMPLATE_README_URL = "https://github.com/yourusername/project-mapper-templates#creating-your-own"
+DEFAULT_TEMPLATE_REPO = "https://github.com/blakesims/project-mapper-templates.git"
+TEMPLATE_README_URL = "https://github.com/blakesims/project-mapper-templates#creating-your-own"
 
 class TemplateManager:
     """Manages template submodule setup and selection."""

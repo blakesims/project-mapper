@@ -1,8 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
 <project-rules>
-  <code-rules>
-    <file-documentation>
-      <file-level-docstring>
+    
+    <code-rules>
+        <file-documentation>
+            
+            <file-level-docstring>
                 """
                 {Clear one-line statement of this file's purpose}
 
@@ -15,7 +17,8 @@
                     This file is used by: {OtherComponent}: {Why it's needed}
                 """
             </file-level-docstring>
-      <example>
+
+            <example>
                 ```python
                 """
                 Manages XML documentation updates for project structure.
@@ -33,9 +36,11 @@
                     ...
                 ```
             </example>
-    </file-documentation>
-    <documentation-maintenance>
-      <llm-instructions>
+        </file-documentation>
+
+        <documentation-maintenance>
+            
+            <llm-instructions>
                 Before modifying ANY file, you MUST:
                 1. Read the current file-level docstring
                 2. Decide if your changes affect the documentation
@@ -49,99 +54,26 @@
               Actions Taken:
               -If "Yes" above, include the docstring edits in your file edits
             </llm-instructions>
-      <update-triggers>
+
+            <update-triggers>
                 Check if your changes involve:
                 - File's main purpose changing
                 - New/modified classes or functions
                 - Changes to what this file uses
                 - Changes to what uses this file
             </update-triggers>
-    </documentation-maintenance>
-    <workflow>
-      <steps>
+        </documentation-maintenance>
+
+        <workflow>
+            <steps>
                 1. READ current file-level docstring
                 2. OUTPUT documentation decision
                 3. MAKE code changes
                 4. UPDATE docstring if needed
             </steps>
-    </workflow>
-  </code-rules>
-  <project-map>
-    <structure>
-      <directory name="tests">
-        <directory name="integration">
-          <file name="test_scanner.py">
-            <purpose>Test script for the LLM Project Companion.</purpose>
-            <components>
-              <component type="function" name="main">Run the project scanner on the current directory.</component>
-              <component type="function" name="print_structure">Print the project structure in a readable format.</component>
-            </components>
-          </file>
-        </directory>
-      </directory>
-      <directory name="src">
-        <directory name="project_mapper">
-          <file name="cli.py">
-            <purpose>Command line interface for project-mapper.</purpose>
-            <components>
-              <component type="function" name="main">Main CLI entry point.</component>
-            </components>
-          </file>
-          <directory name="core">
-            <file name="scanner.py">
-              <purpose>Core scanning functionality for project documentation.</purpose>
-              <components>
-                <component type="class" name="BaseScanner">Abstract base class for language-specific scanners.</component>
-                <component type="function" name="is_supported_file">Check if file should be processed.</component>
-                <component type="function" name="extract_documentation">Extract documentation from source file.</component>
-                <component type="function" name="detect_dependencies">Optional dependency detection.</component>
-                <component type="function" name="scan_project">Scan project directory for supported files.</component>
-              </components>
-            </file>
-            <file name="xml_manager.py">
-              <purpose>XML management for project documentation.</purpose>
-              <components>
-                <component type="class" name="XMLManager">Manages project documentation in XML format.</component>
-                <component type="function" name="ensure_rules_file">Create or validate rules file.</component>
-                <component type="function" name="update_project_map">Update project map while preserving other sections.</component>
-              </components>
-            </file>
-          </directory>
-          <directory name="adapters">
-            <file name="base.py">
-              <purpose>Abstract base adapter interface for language-specific scanners.</purpose>
-              <components>
-                <component type="class" name="BaseAdapter">Abstract base class for language-specific scanners.</component>
-                <component type="function" name="is_supported_file">Check if file should be processed.</component>
-                <component type="function" name="extract_documentation">Extract documentation from source file.</component>
-                <component type="function" name="scan_project">Scan project directory for supported files.</component>
-              </components>
-            </file>
-            <directory name="python">
-              <file name="scanner.py">
-                <purpose>Python-specific implementation of project scanner.</purpose>
-                <components>
-                  <component type="class" name="PythonScanner">Scanner implementation for Python projects.</component>
-                  <component type="function" name="is_supported_file">Check if file is a Python source file.</component>
-                  <component type="function" name="extract_documentation">Extract documentation from Python source file.</component>
-                </components>
-              </file>
-            </directory>
-          </directory>
-          <directory name="git">
-            <file name="hooks.py">
-              <purpose>Git hook management for project-mapper.</purpose>
-              <components>
-                <component type="class" name="GitHookManager">Manages git hooks for project-mapper.</component>
-                <component type="function" name="install_hooks">Install git hooks from templates.</component>
-              </components>
-            </file>
-          </directory>
-        </directory>
-      </directory>
-    </structure>
-    <relationships>
-      <flow description="Project documentation flow">Documentation maintained by LLM based on code analysis</flow>
-    </relationships>
-  </project-map>
+        </workflow>
+        </code-rules>
+        <project-map>
+    <relationships><flow description="Project documentation flow">Documentation maintained by LLM based on code analysis</flow></relationships>
+  <structure><directory name="tests"><directory name="integration"><file name="test_scanner.py"><purpose>Test script for the LLM Project Companion.</purpose><components><component type="function" name="main">Run the project scanner on the current directory.</component><component type="function" name="print_structure">Print the project structure in a readable format.</component></components></file></directory></directory><directory name="test-project"><directory name="src"><file name="example.py"><purpose>Example module for testing project-mapper.</purpose><components><component type="class" name="ExampleClass">Demonstrates proper documentation format.</component><component type="function" name="process_data">Process input data according to rules.</component></components></file></directory></directory><directory name="src"><directory name="project_mapper"><file name="template_manager.py"><purpose>Template management for project-mapper.</purpose><components><component type="class" name="TemplateManager">Manages template submodule setup and selection.</component><component type="function" name="setup_templates">Guide user through template setup process.</component><component type="function" name="get_template_path">Get path to selected template.</component></components></file><file name="cli.py"><purpose>Command line interface for project-mapper.</purpose><components><component type="function" name="main">Main CLI entry point.</component></components></file><directory name="core"><file name="scanner.py"><purpose>Core scanning functionality for project documentation.</purpose><components><component type="class" name="BaseScanner">Abstract base class for language-specific scanners.</component><component type="function" name="is_supported_file">Check if file should be processed.</component><component type="function" name="extract_documentation">Extract documentation from source file.</component><component type="function" name="detect_dependencies">Optional dependency detection.</component><component type="function" name="scan_project">Scan project directory for supported files.</component></components></file><file name="xml_manager.py"><purpose>XML management for project documentation.</purpose><components><component type="class" name="XMLManager">Manages XML templates and .cursorrules file.</component><component type="function" name="update_project_map">Update project map in .cursorrules file.</component><component type="function" name="merge_element">No description</component></components></file></directory><directory name="adapters"><file name="base.py"><purpose>Abstract base adapter interface for language-specific scanners.</purpose><components><component type="class" name="BaseAdapter">Abstract base class for language-specific scanners.</component><component type="function" name="is_supported_file">Check if file should be processed.</component><component type="function" name="extract_documentation">Extract documentation from source file.</component><component type="function" name="scan_project">Scan project directory for supported files.</component></components></file><directory name="python"><file name="scanner.py"><purpose>Python-specific implementation of project scanner.</purpose><components><component type="class" name="PythonScanner">Scanner implementation for Python projects.</component><component type="function" name="is_supported_file">Check if file is a Python source file.</component><component type="function" name="extract_documentation">Extract documentation from Python source file.</component></components></file></directory></directory><directory name="git"><file name="hooks.py"><purpose>Git hook management for project-mapper.</purpose><components><component type="class" name="GitHookManager">Manages git hooks for project-mapper.</component><component type="function" name="install_hooks">Install git hooks from templates.</component></components></file></directory></directory></directory></structure></project-map>
 </project-rules>

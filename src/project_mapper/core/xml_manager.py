@@ -1,244 +1,189 @@
-"""XML management for project documentation."""
+"""XML management for project documentation.
+
+Key Components:
+    XMLManager: Handles reading, writing, and merging of XML templates and .cursorrules
+    _merge_templates(): Merges multiple XML templates while respecting inheritance
+    _load_template(): Loads and validates XML templates
+
+Project Dependencies:
+    This file uses: 
+        - ElementTree: For XML parsing and manipulation
+        - Path: For file path handling
+    This file is used by: CLI: For template management and documentation updates
+"""
 
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Optional, Dict, List
+import logging
 
 class XMLManager:
-    """Manages project documentation in XML format."""
+    """Manages XML templates and .cursorrules file."""
     
     def __init__(self, project_root: Path, template_dir: Optional[Path] = None):
         """Initialize XML manager.
         
         Args:
             project_root: Project root directory
-            template_dir: Optional directory containing templates
+            template_dir: Optional custom template directory
         """
         self.project_root = Path(project_root)
-        self.rules_path = project_root / ".cursorrules"
+        self.template_dir = template_dir or Path(__file__).parent.parent / "templates"
+        self.cursorrules_path = self.project_root / ".cursorrules"
         
-        # Template resolution order:
-        # 1. Explicitly provided template_dir
-        # 2. Project-specific .project-mapper/templates
-        # 3. Package default templates
-        self.template_dirs = []
-        if template_dir:
-            self.template_dirs.append(Path(template_dir))
-        
-        project_templates = project_root / ".project-mapper" / "templates"
-        if project_templates.exists():
-            self.template_dirs.append(project_templates)
-            
-        self.template_dirs.append(Path(__file__).parent.parent / "templates")
-    
-    def ensure_rules_file(self, language: str = "base"):
-        """Create or validate rules file.
+    def _load_template(self, template_path: Path) -> ET.Element:
+        """Load and parse XML template.
         
         Args:
-            language: Language-specific template to use
-        """
-        if not self.rules_path.exists():
-            self._create_initial_rules(language)
-    
-    def _create_initial_rules(self, language: str):
-        """Create initial XML structure from template.
-        
-        Args:
-            language: Language-specific template to use
-        """
-        # Load base template
-        base_template = self._load_template("base")
-        if base_template is None:
-            base_template = self._create_base_structure()
-        
-        # Load language-specific template if different from base
-        if language != "base":
-            lang_template = self._load_template(language)
-            if lang_template is not None:
-                self._merge_templates(base_template, lang_template)
-        
-        self._write_xml(base_template)
-    
-    def _load_template(self, name: str) -> Optional[ET.Element]:
-        """Load template from file.
-        
-        Args:
-            name: Template name (e.g., 'base', 'python')
+            template_path: Path to template file
             
         Returns:
-            Root element of template or None if not found
+            Parsed XML element tree
+            
+        Raises:
+            FileNotFoundError: If template file not found
+            ET.ParseError: If template XML is invalid
         """
-        for template_dir in self.template_dirs:
-            template_path = template_dir / f"{name}.xml"
-            try:
-                tree = ET.parse(template_path)
-                print(f"Using template from: {template_path}")
-                return tree.getroot()
-            except Exception:
-                continue
-                
-        print(f"Could not find template: {name}")
-        return None
-    
-    def _create_base_structure(self) -> ET.Element:
-        """Create minimal base XML structure.
-        
-        Returns:
-            Root element with basic structure
-        """
-        root = ET.Element("project-rules")
-        
-        # Add code rules section
-        rules = ET.SubElement(root, "code-rules")
-        docstrings = ET.SubElement(rules, "docstrings")
-        template = ET.SubElement(docstrings, "template")
-        template.text = "Document purpose and relationships"
-        
-        # Add project map section
-        project_map = ET.SubElement(root, "project-map")
-        structure = ET.SubElement(project_map, "structure")
-        relationships = ET.SubElement(project_map, "relationships")
-        
-        return root
-    
-    def _merge_templates(self, base: ET.Element, language: ET.Element):
-        """Merge language-specific template into base template.
-        
-        Args:
-            base: Base template root element
-            language: Language-specific template root element
-        """
-        # Simple merge strategy: replace sections if they exist
-        for section in language:
-            existing = base.find(section.tag)
-            if existing is not None:
-                base.remove(existing)
-            base.append(section)
-    
-    def update_project_map(self, structure: Dict):
-        """Update project map while preserving other sections.
-        
-        Args:
-            structure: Project structure and documentation
-        """
+        if not template_path.exists():
+            raise FileNotFoundError(f"Template not found: {template_path}")
+            
         try:
-            if not self.rules_path.exists():
-                self.ensure_rules_file()
+            tree = ET.parse(template_path)
+            root = tree.getroot()
+            
+            # Check for template extension
+            extends = root.get('extends')
+            if extends:
+                base_path = template_path.parent / extends
+                base_root = self._load_template(base_path)
+                merged_root = self._merge_templates(base_root, root)
+                return merged_root
                 
-            # Always start with fresh base template
-            base_template = self._load_template("base")
-            if base_template is None:
-                base_template = self._create_base_structure()
+            return root
+        except ET.ParseError as e:
+            logging.error(f"Invalid XML in template {template_path}: {e}")
+            raise
             
-            # If existing file, preserve only project map
-            if self.rules_path.exists():
-                try:
-                    tree = ET.parse(self.rules_path)
-                    old_root = tree.getroot()
-                    old_map = old_root.find("project-map")
-                    if old_map is not None:
-                        project_map = base_template.find("project-map")
-                        if project_map is not None:
-                            base_template.remove(project_map)
-                        base_template.append(old_map)
-                except ET.ParseError:
-                    pass
+    def _merge_templates(self, base: ET.Element, extension: ET.Element) -> ET.Element:
+        """Merge extension template into base template.
+        
+        Args:
+            base: Base template XML element
+            extension: Extension template XML element
             
-            # Update project map with new structure
-            project_map = base_template.find("project-map")
-            if project_map is None:
-                project_map = ET.SubElement(base_template, "project-map")
+        Returns:
+            Merged XML element
+        """
+        # Create a deep copy of base to avoid modifying original
+        merged = ET.fromstring(ET.tostring(base))
+        
+        # Helper function for recursive merging
+        def merge_element(target: ET.Element, source: ET.Element):
+            # Merge attributes
+            target.attrib.update(source.attrib)
             
-            # Clear existing structure
-            project_map.clear()
+            # Create lookup of existing child elements by tag
+            existing = {child.tag: child for child in target}
             
-            # Add new structure
-            structure_elem = ET.SubElement(project_map, "structure")
-            self._add_structure(structure_elem, structure)
+            for child in source:
+                if child.tag in existing:
+                    # If element exists in base, recursively merge
+                    merge_element(existing[child.tag], child)
+                else:
+                    # If new element, append to base
+                    target.append(ET.fromstring(ET.tostring(child)))
+        
+        # Start merge from root
+        merge_element(merged, extension)
+        return merged
+        
+    def _load_templates(self, template_paths: List[Path]) -> ET.Element:
+        """Load and merge multiple templates.
+        
+        Args:
+            template_paths: List of template paths to load
             
-            # Add relationships
-            relationships = ET.SubElement(project_map, "relationships")
-            self._add_relationships(relationships, structure)
+        Returns:
+            Merged template XML element
+        """
+        if not template_paths:
+            # Load default base template
+            base_path = self.template_dir / "base.xml"
+            return self._load_template(base_path)
             
-            self._write_xml(base_template)
+        # Load and merge all templates
+        base = self._load_template(template_paths[0])
+        for path in template_paths[1:]:
+            extension = self._load_template(path)
+            base = self._merge_templates(base, extension)
             
-        except Exception as e:
-            print(f"Error updating project map: {e}")
-            self.ensure_rules_file()
-            self.update_project_map(structure)
-    
+        return base
+        
+    def update_project_map(self, structure: Dict):
+        """Update project map in .cursorrules file.
+        
+        Args:
+            structure: Project structure dictionary
+        """
+        # Load template(s)
+        template_root = self._load_templates([])  # For now, just load base template
+        
+        # If .cursorrules exists, preserve existing content
+        if self.cursorrules_path.exists():
+            try:
+                tree = ET.parse(self.cursorrules_path)
+                existing_root = tree.getroot()
+                
+                # Merge template with existing, preserving project-map
+                merged_root = self._merge_templates(template_root, existing_root)
+                template_root = merged_root
+            except ET.ParseError as e:
+                logging.warning(f"Error parsing existing .cursorrules, creating new: {e}")
+        
+        # Update project-map section
+        project_map = template_root.find("project-map")
+        if project_map is None:
+            project_map = ET.SubElement(template_root, "project-map")
+            
+        # Clear existing structure
+        structure_elem = project_map.find("structure")
+        if structure_elem is not None:
+            project_map.remove(structure_elem)
+            
+        # Add new structure
+        structure_elem = ET.SubElement(project_map, "structure")
+        self._add_structure(structure_elem, structure)
+        
+        # Write updated XML
+        tree = ET.ElementTree(template_root)
+        tree.write(self.cursorrules_path, encoding="utf-8", xml_declaration=True)
+        
     def _add_structure(self, parent: ET.Element, structure: Dict):
-        """Add structure to XML recursively.
+        """Recursively add structure to XML element.
         
         Args:
             parent: Parent XML element
             structure: Structure dictionary
         """
-        for key, value in structure.items():
+        for name, value in structure.items():
             if isinstance(value, dict):
                 if 'purpose' in value:  # File entry
                     file_elem = ET.SubElement(parent, "file")
-                    file_elem.set("name", key)
+                    file_elem.set("name", name)
                     
+                    # Add purpose from docstring
                     purpose = ET.SubElement(file_elem, "purpose")
-                    purpose.text = value.get('purpose', '')
+                    purpose.text = value['purpose']
                     
-                    if 'components' in value:
+                    # Add components if present
+                    if value.get('components'):
                         components = ET.SubElement(file_elem, "components")
                         for comp in value['components']:
-                            component = ET.SubElement(components, "component")
-                            component.set("type", comp.get('type', ''))
-                            component.set("name", comp.get('name', ''))
-                            component.text = comp.get('description', '')
+                            comp_elem = ET.SubElement(components, "component")
+                            comp_elem.set("type", comp['type'])
+                            comp_elem.set("name", comp['name'])
+                            comp_elem.text = comp['description']
                 else:  # Directory
                     dir_elem = ET.SubElement(parent, "directory")
-                    dir_elem.set("name", key)
-                    self._add_structure(dir_elem, value)
-    
-    def _add_relationships(self, parent: ET.Element, structure: Dict):
-        """Add relationships section to XML.
-        
-        Args:
-            parent: Parent XML element
-            structure: Structure dictionary containing file documentation
-        """
-        relationships = ET.SubElement(parent, "relationships")
-        
-        # Extract relationships from docstrings
-        for dir_name, dir_content in structure.items():
-            if isinstance(dir_content, dict):
-                self._extract_relationships(relationships, dir_content)
-    
-    def _extract_relationships(self, parent: ET.Element, structure: Dict):
-        """Extract relationships from structure recursively.
-        
-        Args:
-            parent: Parent XML element
-            structure: Structure dictionary
-        """
-        for name, content in structure.items():
-            if isinstance(content, dict):
-                if 'purpose' in content:  # File entry
-                    if 'components' in content:
-                        for comp in content['components']:
-                            # Look for dependencies in component descriptions
-                            desc = comp.get('description', '')
-                            if 'uses' in desc.lower() or 'used by' in desc.lower():
-                                flow = ET.SubElement(parent, "flow")
-                                flow.set("from", comp.get('name', ''))
-                                flow.text = desc
-                else:  # Directory
-                    self._extract_relationships(parent, content)
-    
-    def _write_xml(self, root: ET.Element):
-        """Write formatted XML to file.
-        
-        Args:
-            root: Root element to write
-        """
-        try:
-            ET.indent(root, space="  ")
-            tree = ET.ElementTree(root)
-            tree.write(self.rules_path, encoding="utf-8", xml_declaration=True)
-        except Exception as e:
-            print(f"Error writing XML file: {e}") 
+                    dir_elem.set("name", name)
+                    self._add_structure(dir_elem, value) 
