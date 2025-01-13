@@ -49,10 +49,10 @@
                 Documentation Decision:
                 - Update Required: Yes/No
                 - Reason: One clear sentence explaining why/why not
-              - Changes Needed: [If Yes] What needs to be updated
+                - Changes Needed: [If Yes] What needs to be updated
 
-              Actions Taken:
-              -If "Yes" above, include the docstring edits in your file edits
+                Actions Taken:
+                - If "Yes" above, include the docstring edits in your file edits
             </llm-instructions>
 
             <update-triggers>
@@ -72,9 +72,8 @@
                 4. UPDATE docstring if needed
             </steps>
         </workflow>
-        </code-rules>
-        <project-map>
-    <structure></structure>
-    <relationships></relationships>
-  </project-map>
+    </code-rules>
+    <project-map>
+        <structure />
+    </project-map>
 </project-rules> 

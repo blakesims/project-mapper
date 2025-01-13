@@ -31,39 +31,19 @@ class XMLManager:
         self.template_dir = template_dir or Path(__file__).parent.parent / "templates"
         self.cursorrules_path = self.project_root / ".cursorrules"
         
-    def _load_template(self, template_path: Path) -> ET.Element:
-        """Load and parse XML template.
+    def _load_template(self, template_path: Optional[Path] = None) -> ET.Element:
+        """Load XML template from file."""
+        if template_path is None:
+            template_path = self.template_dir / "base.xml"
         
-        Args:
-            template_path: Path to template file
-            
-        Returns:
-            Parsed XML element tree
-            
-        Raises:
-            FileNotFoundError: If template file not found
-            ET.ParseError: If template XML is invalid
-        """
-        if not template_path.exists():
-            raise FileNotFoundError(f"Template not found: {template_path}")
-            
         try:
             tree = ET.parse(template_path)
-            root = tree.getroot()
-            
-            # Check for template extension
-            extends = root.get('extends')
-            if extends:
-                base_path = template_path.parent / extends
-                base_root = self._load_template(base_path)
-                merged_root = self._merge_templates(base_root, root)
-                return merged_root
-                
-            return root
-        except ET.ParseError as e:
-            logging.error(f"Invalid XML in template {template_path}: {e}")
-            raise
-            
+            return tree.getroot()
+        except (ET.ParseError, FileNotFoundError) as e:
+            logging.error(f"Failed to load template {template_path}: {e}")
+            # Create empty root element
+            return ET.Element("project-rules")
+        
     def _merge_templates(self, base: ET.Element, extension: ET.Element) -> ET.Element:
         """Merge extension template into base template.
         
@@ -119,40 +99,77 @@ class XMLManager:
             
         return base
         
-    def update_project_map(self, structure: Dict):
-        """Update project map in .cursorrules file.
+    def indent(self, elem: ET.Element, level: int = 0) -> None:
+        """Add proper indentation to element tree."""
+        i = "\n" + level * "  "
+        if len(elem):
+            if not elem.text or not elem.text.strip():
+                elem.text = i + "  "
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+            for subelem in elem:
+                self.indent(subelem, level + 1)
+                if not subelem.tail or not subelem.tail.strip():
+                    subelem.tail = i
+            if not elem.tail or not elem.tail.strip():
+                elem.tail = i
+        else:
+            if level and (not elem.tail or not elem.tail.strip()):
+                elem.tail = i
+            if elem.text:
+                # Handle text content
+                text = elem.text.strip()
+                if "\n" in text:
+                    # Multi-line text - preserve newlines but add indentation
+                    lines = [line.strip() for line in text.split("\n") if line.strip()]
+                    elem.text = i + "  " + ("\n" + i + "  ").join(lines)
+                else:
+                    # Single line text - wrap at 80 chars
+                    words = text.split()
+                    lines = []
+                    current_line = []
+                    current_length = 0
+                    
+                    for word in words:
+                        if current_length + len(word) + 1 <= 80:
+                            current_line.append(word)
+                            current_length += len(word) + 1
+                        else:
+                            if current_line:
+                                lines.append(" ".join(current_line))
+                            current_line = [word]
+                            current_length = len(word)
+                    
+                    if current_line:
+                        lines.append(" ".join(current_line))
+                    
+                    if len(lines) > 1:
+                        elem.text = i + "  " + ("\n" + i + "  ").join(lines)
+                    else:
+                        elem.text = i + "  " + text
+
+    def update_project_map(self, structure: Dict) -> None:
+        """Update project map in .cursorrules file."""
+        # Load base template
+        template_root = self._load_template()
         
-        Args:
-            structure: Project structure dictionary
-        """
-        # Load template(s)
-        template_root = self._load_templates([])  # For now, just load base template
-        
-        # If .cursorrules exists, preserve existing content
-        if self.cursorrules_path.exists():
-            try:
-                tree = ET.parse(self.cursorrules_path)
-                existing_root = tree.getroot()
-                
-                # Merge template with existing, preserving project-map
-                merged_root = self._merge_templates(template_root, existing_root)
-                template_root = merged_root
-            except ET.ParseError as e:
-                logging.warning(f"Error parsing existing .cursorrules, creating new: {e}")
-        
-        # Update project-map section
+        # Get or create project-map section
         project_map = template_root.find("project-map")
         if project_map is None:
             project_map = ET.SubElement(template_root, "project-map")
-            
-        # Clear existing structure
+        
+        # Clear and update structure
         structure_elem = project_map.find("structure")
-        if structure_elem is not None:
-            project_map.remove(structure_elem)
-            
+        if structure_elem is None:
+            structure_elem = ET.SubElement(project_map, "structure")
+        else:
+            structure_elem.clear()
+        
         # Add new structure
-        structure_elem = ET.SubElement(project_map, "structure")
         self._add_structure(structure_elem, structure)
+        
+        # Add proper indentation
+        self.indent(template_root)
         
         # Write updated XML
         tree = ET.ElementTree(template_root)

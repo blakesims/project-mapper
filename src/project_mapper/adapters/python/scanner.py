@@ -31,14 +31,14 @@ class PythonScanner(BaseAdapter):
             
         Returns:
             Dictionary containing:
-            - purpose: Module docstring
-            - components: List of class/function info
+            - purpose: Full module docstring
+            - components: List of class/function info with full docstrings
         """
         try:
             with open(file_path) as f:
                 tree = ast.parse(f.read())
             
-            # Get module docstring
+            # Get full module docstring
             module_doc = ast.get_docstring(tree) or "No description available"
             
             # Extract components (classes/functions)
@@ -50,11 +50,11 @@ class PythonScanner(BaseAdapter):
                         components.append({
                             'name': node.name,
                             'type': 'class' if isinstance(node, ast.ClassDef) else 'function',
-                            'description': doc.split('\n')[0]
+                            'description': doc  # Use full docstring
                         })
             
             return {
-                'purpose': module_doc.split('\n')[0],
+                'purpose': module_doc,  # Use full docstring
                 'components': components
             }
             
