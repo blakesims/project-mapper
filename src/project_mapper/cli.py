@@ -12,11 +12,14 @@ Project Dependencies:
 
 import argparse
 from pathlib import Path
+import logging
 
 from .adapters.python import PythonScanner
 from .core.xml_manager import XMLManager
 from .git.hooks import GitHookManager
 from .template_manager import TemplateManager
+
+logger = logging.getLogger(__name__)
 
 def main():
     """Main CLI entry point."""
@@ -35,9 +38,14 @@ def main():
         help="Project language (default: python)"
     )
     parser.add_argument(
-        "--template", "-t",
+        "--base-template", "-b",
         type=str,
-        help="Template name to use (will prompt if not specified)"
+        help="Base template name to use (will prompt if not specified)"
+    )
+    parser.add_argument(
+        "--extension-template", "-e",
+        type=str,
+        help="Extension template name to use (will prompt if not specified)"
     )
     parser.add_argument(
         "--install-hooks",
@@ -47,7 +55,7 @@ def main():
     parser.add_argument(
         "--setup-templates",
         action="store_true",
-        help="Setup or change template repository"
+        help="Setup or change templates"
     )
     
     args = parser.parse_args()
@@ -55,30 +63,36 @@ def main():
     
     # Handle template setup
     template_manager = TemplateManager(project_root)
-    template_name = None
+    base_template = extension_template = None
     
     if args.setup_templates:
-        template_name = template_manager.setup_templates()
-        if template_name:
-            print(f"\nTemplate set to: {template_name}")
+        base_template, extension_template = template_manager.setup_templates()
+        if base_template:
+            print(f"\nBase template set to: {base_template}")
+            if extension_template:
+                print(f"Extension template set to: {extension_template}")
             print("You can change templates anytime with: project-mapper --setup-templates")
         return
     
-    # Get template path
-    if args.template:
-        template_name = args.template
+    # Get template paths
+    if args.base_template:
+        base_template = args.base_template
+    if args.extension_template:
+        extension_template = args.extension_template
     elif not template_manager.template_dir.exists():
         print("\nNo project-specific templates found.")
         setup = input("Would you like to set them up now? (yes/no): ").lower()
         if setup == 'yes':
-            template_name = template_manager.setup_templates()
+            base_template, extension_template = template_manager.setup_templates()
     
-    template_path = template_manager.get_template_path(template_name) if template_name else None
+    # Get the actual template paths
+    template_paths = template_manager.get_template_paths(base_template, extension_template)
+    logger.debug(f"Using template paths: {template_paths}")
     
     # Install git hooks if requested
     if args.install_hooks:
         try:
-            hook_manager = GitHookManager(project_root, template_path)
+            hook_manager = GitHookManager(project_root, template_paths)
             hook_manager.install_hooks()
             return
         except Exception as e:
@@ -86,7 +100,7 @@ def main():
             return
     
     # Initialize components
-    xml_manager = XMLManager(project_root, template_path)
+    xml_manager = XMLManager(project_root, template_paths)
     
     # Create scanner based on language
     if args.language == "python":
@@ -102,8 +116,10 @@ def main():
     xml_manager.update_project_map(structure)
     print("Done!")
     
-    if template_name:
-        print(f"\nUsing template: {template_name}")
+    if base_template:
+        print(f"\nUsing base template: {base_template}")
+        if extension_template:
+            print(f"Using extension template: {extension_template}")
         print("You can change templates anytime with: project-mapper --setup-templates")
 
 if __name__ == "__main__":

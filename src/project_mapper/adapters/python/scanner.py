@@ -32,7 +32,6 @@ class PythonScanner(BaseAdapter):
         Returns:
             Dictionary containing:
             - purpose: Full module docstring
-            - components: List of class/function info with full docstrings
         """
         try:
             with open(file_path) as f:
@@ -41,26 +40,12 @@ class PythonScanner(BaseAdapter):
             # Get full module docstring
             module_doc = ast.get_docstring(tree) or "No description available"
             
-            # Extract components (classes/functions)
-            components = []
-            for node in ast.walk(tree):
-                if isinstance(node, (ast.ClassDef, ast.FunctionDef)):
-                    if not node.name.startswith('_'):  # Skip private members
-                        doc = ast.get_docstring(node) or "No description"
-                        components.append({
-                            'name': node.name,
-                            'type': 'class' if isinstance(node, ast.ClassDef) else 'function',
-                            'description': doc  # Use full docstring
-                        })
-            
             return {
-                'purpose': module_doc,  # Use full docstring
-                'components': components
+                'purpose': module_doc
             }
             
         except Exception as e:
             print(f"Error extracting documentation from {file_path}: {e}")
             return {
-                'purpose': "Error extracting documentation",
-                'components': []
+                'purpose': "Error extracting documentation"
             } 

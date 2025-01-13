@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<project-rules>
+<project-rules extends="base.xml">
   <code-rules>
     <file-documentation>
       <file-level-docstring>
@@ -46,6 +46,18 @@
         ...
 
         ```</example>
+    <python-specific>
+        <docstring-format>
+          Google style docstrings preferred</docstring-format>
+      <type-hints>
+          Use type hints for function parameters and return values</type-hints>
+      <imports>
+          - Group imports: stdlib, third-party, local
+
+          - Use absolute imports within the project
+
+          - Avoid wildcard imports</imports>
+      </python-specific>
     </file-documentation>
   <documentation-maintenance>
       <llm-instructions>
@@ -67,17 +79,16 @@
 
         Actions Taken:
 
-        - If "Yes" above, include the docstring edits in your file edits</llm-instructions>
+        -If "Yes" above, include the docstring edits in your file edits</llm-instructions>
     <update-triggers>
-        Check if your changes involve:
-
-        - File's main purpose changing
-
-        - New/modified classes or functions
-
-        - Changes to what this file uses
-
-        - Changes to what uses this file</update-triggers>
+                Check if your changes involve:
+                - File's main purpose changing
+                - New/modified classes or functions
+                - Changes to what this file uses
+                - Changes to what uses this file
+            <python-specific>
+          - testing</python-specific>
+      </update-triggers>
     </documentation-maintenance>
   <workflow>
       <steps>
@@ -92,15 +103,7 @@
   </code-rules>
 <project-map>
     <structure>
-      <directory name="tests">
-        <directory name="integration">
-          <file name="test_scanner.py">
-            <purpose>
-              Test script for the LLM Project Companion.</purpose>
-          </file>
-        </directory>
-      </directory>
-    <directory name="test-project">
+      <directory name="test-project">
         <directory name="src">
           <file name="example.py">
             <purpose>
@@ -205,5 +208,9 @@
         </directory>
       </directory>
     </structure>
+  <relationships>
+      <flow description="Project documentation flow">
+        Documentation maintained by LLM based on code analysis</flow>
+    </relationships>
   </project-map>
 </project-rules>
