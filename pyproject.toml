@@ -1,0 +1,15 @@
+[project]
+name = "llm-project-companion"
+version = "0.0.1"
+description = "A development tool that maintains up-to-date project documentation for LLM-assisted development"
+requires-python = ">=3.9"
+authors = [
+    {name = "Project Maintainers"}
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project.dependencies]
+pathlib = "*" 
