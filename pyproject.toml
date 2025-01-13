@@ -1,7 +1,7 @@
 [project]
-name = "llm-project-companion"
+name = "project-mapper"
 version = "0.0.1"
-description = "A development tool that maintains up-to-date project documentation for LLM-assisted development"
+description = "Project documentation mapper for LLM-assisted development"
 requires-python = ">=3.9"
 authors = [
     {name = "Project Maintainers"}
@@ -9,6 +9,9 @@ authors = [
 dependencies = [
     "pathlib"
 ]
+
+[project.scripts]
+project-mapper = "project_mapper.cli:main"
 
 [build-system]
 requires = ["setuptools>=61.0"]
