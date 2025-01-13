@@ -22,24 +22,18 @@
         <trigger>Dependencies shift</trigger>
         <trigger>Architecture changes</trigger>
       </update-triggers>
-      <focus-points>
-        <point>Why over what</point>
-        <point>Key relationships</point>
-        <point>Other developers perspective</point>
-        <point>Architectural significance</point>
-      </focus-points>
+      <llm-check>
+        Before making changes, output:
+        Doc Update: [yes/no]
+        Reason: [one-line explanation]
+      </llm-check>
     </maintenance>
     <workflow>
       <steps>
-        <step>Read existing docs</step>
+        <step>Check triggers</step>
+        <step>Output decision</step>
         <step>Make changes</step>
-        <step>Update affected docs</step>
       </steps>
-      <verification>
-        <check>Docstrings reflect current purpose</check>
-        <check>Dependencies show key relationships</check>
-        <check>Architecture is clear</check>
-      </verification>
     </workflow>
   </code-rules>
   <project-map>
