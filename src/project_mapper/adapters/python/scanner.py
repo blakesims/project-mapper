@@ -4,9 +4,9 @@ import ast
 from pathlib import Path
 from typing import Dict, List, Optional
 
-from ...core.scanner import BaseScanner
+from ..base import BaseAdapter
 
-class PythonScanner(BaseScanner):
+class PythonScanner(BaseAdapter):
     """Scanner implementation for Python projects."""
     
     def is_supported_file(self, file_path: Path) -> bool:
@@ -33,7 +33,6 @@ class PythonScanner(BaseScanner):
             Dictionary containing:
             - purpose: Module docstring
             - components: List of class/function info
-            - dependencies: Import relationships
         """
         try:
             with open(file_path) as f:
@@ -54,47 +53,14 @@ class PythonScanner(BaseScanner):
                             'description': doc.split('\n')[0]
                         })
             
-            # Get dependencies
-            dependencies = self.detect_dependencies(file_path)
-            
             return {
                 'purpose': module_doc.split('\n')[0],
-                'components': components,
-                'dependencies': dependencies
+                'components': components
             }
             
         except Exception as e:
             print(f"Error extracting documentation from {file_path}: {e}")
-            return {}
-    
-    def detect_dependencies(self, file_path: Path) -> List[str]:
-        """Detect Python file dependencies through imports.
-        
-        Args:
-            file_path: Path to Python file
-            
-        Returns:
-            List of dependency descriptions
-        """
-        try:
-            with open(file_path) as f:
-                tree = ast.parse(f.read())
-            
-            dependencies = []
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Import):
-                    for name in node.names:
-                        if not name.name.startswith('_'):
-                            dependencies.append(f"{name.name}: Module import")
-                elif isinstance(node, ast.ImportFrom):
-                    if not node.module.startswith('_'):
-                        module = node.module or ""
-                        for name in node.names:
-                            if not name.name.startswith('_'):
-                                dependencies.append(f"{module}.{name.name}: Specific import")
-            
-            return dependencies
-            
-        except Exception as e:
-            print(f"Error detecting dependencies in {file_path}: {e}")
-            return [] 
+            return {
+                'purpose': "Error extracting documentation",
+                'components': []
+            } 

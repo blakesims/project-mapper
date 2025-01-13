@@ -50,46 +50,8 @@
           <component type="function" name="main">Run the project scanner on the current directory.</component>
           <component type="function" name="print_structure">Print the project structure in a readable format.</component>
         </components>
-        <dependencies>
-          <dependency>pathlib.Path: Specific import</dependency>
-          <dependency>llm_companion.ProjectScanner: Specific import</dependency>
-        </dependencies>
       </file>
       <directory name="src">
-        <directory name="src/llm_companion">
-          <file name="src/llm_companion/core.py">
-            <purpose>Core functionality for scanning project structure and managing docstrings.</purpose>
-            <components>
-              <component type="class" name="ProjectScanner">Core scanner for project structure and documentation.</component>
-              <component type="function" name="scan_project">Scan project and return structure with docstrings.</component>
-              <component type="function" name="update_cursorrules">Update .cursorrules XML file with current project structure.</component>
-            </components>
-            <dependencies>
-              <dependency>pathlib.Path: Specific import</dependency>
-              <dependency>ast: Module import</dependency>
-              <dependency>typing.Dict: Specific import</dependency>
-              <dependency>typing.Optional: Specific import</dependency>
-              <dependency>logging: Module import</dependency>
-              <dependency>cursorrules_manager.CursorRulesManager: Specific import</dependency>
-            </dependencies>
-          </file>
-          <file name="src/llm_companion/cursorrules_manager.py">
-            <purpose>Manages .cursorrules file creation and updates, maintaining XML structure and project documentation.</purpose>
-            <components>
-              <component type="class" name="CursorRulesManager">Manages .cursorrules file updates and maintains documentation standards.</component>
-              <component type="function" name="ensure_rules_file">Create .cursorrules if it doesn't exist.</component>
-              <component type="function" name="update_project_map">Update project-map section in .cursorrules while preserving guidelines.</component>
-            </components>
-            <dependencies>
-              <dependency>xml.etree.ElementTree: Module import</dependency>
-              <dependency>pathlib.Path: Specific import</dependency>
-              <dependency>logging: Module import</dependency>
-              <dependency>ast: Module import</dependency>
-              <dependency>typing.List: Specific import</dependency>
-              <dependency>typing.Optional: Specific import</dependency>
-            </dependencies>
-          </file>
-        </directory>
         <directory name="src/project_mapper">
           <directory name="src/project_mapper/core">
             <file name="src/project_mapper/core/scanner.py">
@@ -101,14 +63,6 @@
                 <component type="function" name="detect_dependencies">Optional dependency detection.</component>
                 <component type="function" name="scan_project">Scan project directory for supported files.</component>
               </components>
-              <dependencies>
-                <dependency>abc.ABC: Specific import</dependency>
-                <dependency>abc.abstractmethod: Specific import</dependency>
-                <dependency>pathlib.Path: Specific import</dependency>
-                <dependency>typing.Dict: Specific import</dependency>
-                <dependency>typing.List: Specific import</dependency>
-                <dependency>typing.Optional: Specific import</dependency>
-              </dependencies>
             </file>
             <file name="src/project_mapper/core/xml_manager.py">
               <purpose>XML management for project documentation.</purpose>
@@ -117,12 +71,6 @@
                 <component type="function" name="ensure_rules_file">Create or validate rules file.</component>
                 <component type="function" name="update_project_map">Update project map while preserving other sections.</component>
               </components>
-              <dependencies>
-                <dependency>xml.etree.ElementTree: Module import</dependency>
-                <dependency>pathlib.Path: Specific import</dependency>
-                <dependency>typing.Dict: Specific import</dependency>
-                <dependency>typing.Optional: Specific import</dependency>
-              </dependencies>
             </file>
           </directory>
           <directory name="src/project_mapper/adapters">
@@ -135,28 +83,23 @@
                   <component type="function" name="extract_documentation">Extract documentation from Python source file.</component>
                   <component type="function" name="detect_dependencies">Detect Python file dependencies through imports.</component>
                 </components>
-                <dependencies>
-                  <dependency>ast: Module import</dependency>
-                  <dependency>pathlib.Path: Specific import</dependency>
-                  <dependency>typing.Dict: Specific import</dependency>
-                  <dependency>typing.List: Specific import</dependency>
-                  <dependency>typing.Optional: Specific import</dependency>
-                  <dependency>core.scanner.BaseScanner: Specific import</dependency>
-                </dependencies>
               </file>
             </directory>
+            <file name="src/project_mapper/adapters/base.py">
+              <purpose>Abstract base adapter interface for language-specific scanners.</purpose>
+              <components>
+                <component type="class" name="BaseAdapter">Abstract base class for language-specific scanners.</component>
+                <component type="function" name="is_supported_file">Check if file should be processed.</component>
+                <component type="function" name="extract_documentation">Extract documentation from source file.</component>
+                <component type="function" name="scan_project">Scan project directory for supported files.</component>
+              </components>
+            </file>
           </directory>
           <file name="src/project_mapper/cli.py">
             <purpose>Command line interface for project-mapper.</purpose>
             <components>
               <component type="function" name="main">Main CLI entry point.</component>
             </components>
-            <dependencies>
-              <dependency>argparse: Module import</dependency>
-              <dependency>pathlib.Path: Specific import</dependency>
-              <dependency>adapters.python.PythonScanner: Specific import</dependency>
-              <dependency>core.xml_manager.XMLManager: Specific import</dependency>
-            </dependencies>
           </file>
         </directory>
       </directory>

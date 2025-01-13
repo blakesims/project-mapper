@@ -16,7 +16,7 @@ class XMLManager:
         """
         self.project_root = Path(project_root)
         self.rules_path = project_root / ".cursorrules"
-        self.template_dir = template_dir or Path(__file__).parent / "templates"
+        self.template_dir = template_dir or Path(__file__).parent.parent / "templates"
     
     def ensure_rules_file(self, language: str = "base"):
         """Create or validate rules file.

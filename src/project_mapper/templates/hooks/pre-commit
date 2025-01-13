@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# Get the project root directory
+project_root=$(git rev-parse --show-toplevel)
+
+# Run project-mapper on the project
+project-mapper --project-root "$project_root"
+
+# Add the updated .cursorrules file
+git add "$project_root/.cursorrules" 
