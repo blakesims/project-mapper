@@ -3,11 +3,53 @@
 import ast
 from pathlib import Path
 from typing import Dict, List, Optional
+import pathspec
 
 from ..base import BaseAdapter
 
+# Common virtual environment directory names
+VENV_DIRS = {'venv', 'env', '.env', '.venv', 'virtualenv', '.virtualenv'}
+
 class PythonScanner(BaseAdapter):
     """Scanner implementation for Python projects."""
+    
+    def __init__(self, project_root: Path):
+        """Initialize scanner with project root.
+        
+        Args:
+            project_root: Root directory of the project
+        """
+        super().__init__(project_root)
+        self.gitignore_spec = self._load_gitignore()
+        
+    def _load_gitignore(self) -> pathspec.PathSpec:
+        """Load gitignore patterns from .gitignore file.
+        
+        Returns:
+            PathSpec object for matching against gitignore patterns
+        """
+        gitignore_path = self.project_root / '.gitignore'
+        patterns = []
+        
+        if gitignore_path.exists():
+            with open(gitignore_path) as f:
+                patterns = [line.strip() for line in f if line.strip() and not line.startswith('#')]
+        
+        # Add default Python patterns if not already in .gitignore
+        default_patterns = {
+            '*.py[cod]',  # Python bytecode
+            '__pycache__/',
+            '*.so',  # C extensions
+            'dist/',
+            'build/',
+            '*.egg-info/',
+        }
+        patterns.extend(p for p in default_patterns if p not in patterns)
+        
+        return pathspec.PathSpec.from_lines(
+            pathspec.patterns.GitWildMatchPattern,
+            patterns
+        )
     
     def is_supported_file(self, file_path: Path) -> bool:
         """Check if file is a Python source file.
@@ -18,6 +60,23 @@ class PythonScanner(BaseAdapter):
         Returns:
             True if file is a .py file and not a special file
         """
+        # Check if file is in a virtual environment directory
+        try:
+            rel_path = file_path.relative_to(self.project_root)
+            parts = rel_path.parts
+            
+            # Check virtual env directories
+            if any(part in VENV_DIRS for part in parts):
+                return False
+                
+            # Check gitignore patterns
+            if self.gitignore_spec.match_file(str(rel_path)):
+                return False
+                
+        except ValueError:
+            # If file is not under project root, skip it
+            return False
+            
         return (
             file_path.suffix == '.py' and
             not file_path.name.startswith('__')

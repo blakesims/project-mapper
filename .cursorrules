@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<project-rules extends="base.xml">
+<project-rules>
   <code-rules>
     <file-documentation>
       <file-level-docstring>
@@ -13,7 +13,7 @@
 
         {function_name}(): {What this function does and why it's needed}
 
-        Project Dependencies:
+        File Dependencies:
 
         This file uses: {OtherComponent}: {Why it's used}
 
@@ -33,7 +33,7 @@
 
         update_rules(): Updates documentation while preserving existing rules
 
-        Project Dependencies:
+        File Dependencies:
 
         This file uses: ProjectScanner: To get current project structure
 
@@ -46,18 +46,6 @@
         ...
 
         ```</example>
-    <python-specific>
-        <docstring-format>
-          Google style docstrings preferred</docstring-format>
-      <type-hints>
-          Use type hints for function parameters and return values</type-hints>
-      <imports>
-          - Group imports: stdlib, third-party, local
-
-          - Use absolute imports within the project
-
-          - Avoid wildcard imports</imports>
-      </python-specific>
     </file-documentation>
   <documentation-maintenance>
       <llm-instructions>
@@ -81,18 +69,15 @@
 
         -If "Yes" above, include the docstring edits in your file edits</llm-instructions>
     <update-triggers>
-                Check if your changes involve:
-                - File's main purpose changing
-                - New/modified classes or functions
-                - Changes to what this file uses
-                - Changes to what uses this file
-            <python-specific>
-          - Changes to function signatures (params/return types)
+        Check if your changes involve:
 
-          - New decorators or class inheritance changes
+        - File's main purpose changing
 
-          - Changes to import structure</python-specific>
-      </update-triggers>
+        - New/modified classes or functions
+
+        - Changes to what this file uses
+
+        - Changes to what uses this file</update-triggers>
     </documentation-maintenance>
   <workflow>
       <steps>
@@ -107,27 +92,7 @@
   </code-rules>
 <project-map>
     <structure>
-      <directory name="test-project">
-        <directory name="src">
-          <file name="example.py">
-            <purpose>
-              Example module for testing project-mapper.
-
-              Key Components:
-
-              ExampleClass: Demonstrates documentation format
-
-              process_data(): Shows function documentation
-
-              Project Dependencies:
-
-              This file uses: json: For data processing
-
-              This file is used by: main.py: As example implementation</purpose>
-          </file>
-        </directory>
-      </directory>
-    <directory name="src">
+      <directory name="src">
         <directory name="project_mapper">
           <file name="template_manager.py">
             <purpose>

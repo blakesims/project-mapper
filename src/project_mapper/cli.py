@@ -1,7 +1,7 @@
 """Command line interface for project-mapper.
 
 Key Components:
-    main(): CLI entry point handling template setup and project scanning
+    main(): CLI entry point handling template setup and project scanning.
 
 Project Dependencies:
     This file uses: 
@@ -11,15 +11,100 @@ Project Dependencies:
 """
 
 import argparse
-from pathlib import Path
 import logging
+from pathlib import Path
+
+# Configure default logging first, before any other imports
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(message)s'
+)
 
 from .adapters.python import PythonScanner
 from .core.xml_manager import XMLManager
 from .git.hooks import GitHookManager
 from .template_manager import TemplateManager
 
+# Version information
+__version__ = "0.1.0"
+
 logger = logging.getLogger(__name__)
+
+def setup_logging(debug: bool = False):
+    """Configure logging level and format.
+    
+    Args:
+        debug: If True, set logging level to DEBUG
+    """
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.DEBUG if debug else logging.INFO)
+    
+    # Remove any existing handlers
+    for handler in root_logger.handlers[:]:
+        root_logger.removeHandler(handler)
+    
+    # Add new handler with appropriate format
+    handler = logging.StreamHandler()
+    handler.setFormatter(
+        logging.Formatter('%(levelname)s:%(name)s:%(message)s' if debug else '%(message)s')
+    )
+    root_logger.addHandler(handler)
+
+def handle_template_update(template_manager: TemplateManager) -> bool:
+    """Handle template update process.
+    
+    Args:
+        template_manager: Template manager instance
+        
+    Returns:
+        True if update was successful or skipped
+    """
+    updates = template_manager.check_template_updates()
+    
+    # Check for errors
+    if updates['error']:
+        for error in updates['error']:
+            print(error)
+        if "not initialized" in updates['error'][0]:
+            return True  # Not an error, just not initialized yet
+        return False
+        
+    # If no updates available
+    if not any([updates['modified'], updates['added'], updates['deleted']]):
+        print("Templates are up to date!")
+        return True
+        
+    # Show available updates
+    print("\nTemplate updates available:")
+    
+    if updates['modified']:
+        print("\nFiles to be modified:")
+        for file in updates['modified']:
+            print(f"  - {file}")
+            
+    if updates['added']:
+        print("\nFiles to be added:")
+        for file in updates['added']:
+            print(f"  - {file}")
+            
+    if updates['deleted']:
+        print("\nFiles to be deleted:")
+        for file in updates['deleted']:
+            print(f"  - {file}")
+            
+    # Prompt for update
+    choice = input("\nWould you like to update templates? (yes/no): ").lower().strip()
+    if choice not in ('yes', 'y'):
+        print("Update skipped.")
+        return True
+        
+    # Perform update
+    if template_manager.update_templates():
+        print("Templates updated successfully!")
+        return True
+    else:
+        print("Failed to update templates.")
+        return False
 
 def main():
     """Main CLI entry point."""
@@ -57,13 +142,38 @@ def main():
         action="store_true",
         help="Setup or change templates"
     )
+    parser.add_argument(
+        "--update-templates",
+        action="store_true",
+        help="Check for and apply template updates"
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug logging"
+    )
+    parser.add_argument(
+        "--version", "-v",
+        action="version",
+        version=f"%(prog)s {__version__}",
+        help="Show version number and exit"
+    )
     
     args = parser.parse_args()
+    
+    # Setup logging first
+    setup_logging(args.debug)
+    
     project_root = Path(args.project_root).resolve()
     
     # Handle template setup
     template_manager = TemplateManager(project_root)
     base_template = extension_template = None
+    
+    # Handle template update
+    if args.update_templates:
+        if not handle_template_update(template_manager):
+            return
     
     if args.setup_templates:
         base_template, extension_template = template_manager.setup_templates()

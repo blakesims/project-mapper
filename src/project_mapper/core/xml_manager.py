@@ -34,18 +34,21 @@ class XMLManager:
         self.template_paths = template_paths or []
         self.template_dir = Path(__file__).parent.parent / "templates"
         self.cursorrules_path = self.project_root / ".cursorrules"
-        logger.debug(f"Initialized XMLManager with template_paths: {self.template_paths}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Initialized XMLManager with template_paths: {self.template_paths}")
         
     def _load_template(self, template_path: Optional[Path] = None) -> ET.Element:
         """Load XML template from file."""
         if template_path is None:
             template_path = self.template_dir / "base.xml"
         
-        logger.debug(f"Loading template from: {template_path}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Loading template from: {template_path}")
         try:
             tree = ET.parse(template_path)
             root = tree.getroot()
-            logger.debug(f"Successfully loaded template with root tag: {root.tag}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f"Successfully loaded template with root tag: {root.tag}")
             return root
         except (ET.ParseError, FileNotFoundError) as e:
             logger.error(f"Failed to load template {template_path}: {e}")
@@ -62,9 +65,10 @@ class XMLManager:
         Returns:
             Merged XML element
         """
-        logger.debug("Merging templates")
-        logger.debug(f"Base template root: {base.tag}")
-        logger.debug(f"Extension template root: {extension.tag}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Merging templates")
+            logger.debug(f"Base template root: {base.tag}")
+            logger.debug(f"Extension template root: {extension.tag}")
         
         # Create a deep copy of base to avoid modifying original
         merged = ET.fromstring(ET.tostring(base))
@@ -87,7 +91,8 @@ class XMLManager:
         
         # Start merge from root
         merge_element(merged, extension)
-        logger.debug("Templates merged successfully")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Templates merged successfully")
         return merged
 
     def _load_templates(self, template_paths: List[Path]) -> ET.Element:
@@ -99,11 +104,13 @@ class XMLManager:
         Returns:
             Merged template XML element
         """
-        logger.debug(f"Loading templates from paths: {template_paths}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Loading templates from paths: {template_paths}")
         if not template_paths:
             # Load default base template
             base_path = self.template_dir / "base.xml"
-            logger.debug(f"No template paths provided, using default: {base_path}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(f"No template paths provided, using default: {base_path}")
             return self._load_template(base_path)
             
         # Load and merge all templates
@@ -165,10 +172,12 @@ class XMLManager:
 
     def update_project_map(self, structure: Dict) -> None:
         """Update project map in .cursorrules file."""
-        logger.debug("Updating project map")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Updating project map")
         # Load and merge templates
         template_root = self._load_templates(self.template_paths)
-        logger.debug("Templates loaded and merged")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Templates loaded and merged")
         
         # Get or create project-map section
         project_map = template_root.find("project-map")
@@ -191,7 +200,8 @@ class XMLManager:
         # Write updated XML
         tree = ET.ElementTree(template_root)
         tree.write(self.cursorrules_path, encoding="utf-8", xml_declaration=True)
-        logger.debug(f"Updated .cursorrules file at: {self.cursorrules_path}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Updated .cursorrules file at: {self.cursorrules_path}")
         
     def _add_structure(self, parent: ET.Element, structure: Dict):
         """Recursively add structure to XML element.
