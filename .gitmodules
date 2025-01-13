@@ -1,0 +1,3 @@
+[submodule "project-mapper-templates"]
+	path = project-mapper-templates
+	url = https://github.com/blakesims/project-mapper-templates.git

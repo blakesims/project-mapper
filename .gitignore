@@ -67,3 +67,5 @@ test.db
 logs/
 .cursorrules.bak
 
+tset-project
+test-project

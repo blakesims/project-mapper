@@ -16,7 +16,20 @@ class XMLManager:
         """
         self.project_root = Path(project_root)
         self.rules_path = project_root / ".cursorrules"
-        self.template_dir = template_dir or Path(__file__).parent.parent / "templates"
+        
+        # Template resolution order:
+        # 1. Explicitly provided template_dir
+        # 2. Project-specific .project-mapper/templates
+        # 3. Package default templates
+        self.template_dirs = []
+        if template_dir:
+            self.template_dirs.append(Path(template_dir))
+        
+        project_templates = project_root / ".project-mapper" / "templates"
+        if project_templates.exists():
+            self.template_dirs.append(project_templates)
+            
+        self.template_dirs.append(Path(__file__).parent.parent / "templates")
     
     def ensure_rules_file(self, language: str = "base"):
         """Create or validate rules file.
@@ -55,13 +68,17 @@ class XMLManager:
         Returns:
             Root element of template or None if not found
         """
-        template_path = self.template_dir / f"{name}.xml"
-        try:
-            tree = ET.parse(template_path)
-            return tree.getroot()
-        except Exception as e:
-            print(f"Could not load template {name}: {e}")
-            return None
+        for template_dir in self.template_dirs:
+            template_path = template_dir / f"{name}.xml"
+            try:
+                tree = ET.parse(template_path)
+                print(f"Using template from: {template_path}")
+                return tree.getroot()
+            except Exception:
+                continue
+                
+        print(f"Could not find template: {name}")
+        return None
     
     def _create_base_structure(self) -> ET.Element:
         """Create minimal base XML structure.
@@ -183,11 +200,35 @@ class XMLManager:
         
         Args:
             parent: Parent XML element
+            structure: Structure dictionary containing file documentation
+        """
+        relationships = ET.SubElement(parent, "relationships")
+        
+        # Extract relationships from docstrings
+        for dir_name, dir_content in structure.items():
+            if isinstance(dir_content, dict):
+                self._extract_relationships(relationships, dir_content)
+    
+    def _extract_relationships(self, parent: ET.Element, structure: Dict):
+        """Extract relationships from structure recursively.
+        
+        Args:
+            parent: Parent XML element
             structure: Structure dictionary
         """
-        flow = ET.SubElement(parent, "flow")
-        flow.set("description", "Project documentation flow")
-        flow.text = "Documentation maintained by LLM based on code analysis"
+        for name, content in structure.items():
+            if isinstance(content, dict):
+                if 'purpose' in content:  # File entry
+                    if 'components' in content:
+                        for comp in content['components']:
+                            # Look for dependencies in component descriptions
+                            desc = comp.get('description', '')
+                            if 'uses' in desc.lower() or 'used by' in desc.lower():
+                                flow = ET.SubElement(parent, "flow")
+                                flow.set("from", comp.get('name', ''))
+                                flow.text = desc
+                else:  # Directory
+                    self._extract_relationships(parent, content)
     
     def _write_xml(self, root: ET.Element):
         """Write formatted XML to file.
